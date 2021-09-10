@@ -28,6 +28,7 @@ defmodule JOSE.JWS do
     * `"Ed448ph"`
     * `"EdDSA"`
     * `"ES256"`
+    * `"ES256K"`
     * `"ES384"`
     * `"ES512"`
     * `"HS256"`
@@ -94,10 +95,11 @@ defmodule JOSE.JWS do
       iex> JOSE.JWS.verify(jwk_eddsa, signed_eddsa) |> elem(0)
       true
 
-  ### ES256, ES384, and ES512
+  ### ES256, ES256K, ES384, and ES512
 
       # let's generate the 3 keys we'll use below
       jwk_es256 = JOSE.JWK.generate_key({:ec, :secp256r1})
+      jwk_es256l = JOSE.JWK.generate_key({:ec, :secp256k1})
       jwk_es384 = JOSE.JWK.generate_key({:ec, :secp384r1})
       jwk_es512 = JOSE.JWK.generate_key({:ec, :secp521r1})
 
@@ -105,6 +107,12 @@ defmodule JOSE.JWS do
       iex> signed_es256 = JOSE.JWS.sign(jwk_es256, "{}", %{ "alg" => "ES256" }) |> JOSE.JWS.compact |> elem(1)
       "eyJhbGciOiJFUzI1NiJ9.e30.nb7cEQQuIi2NgcP5A468FHGG8UZg8gWZjloISyVIwNh3X6FiTTFZsvc0mL3RnulWoNJzKF6xwhae3botI1LbRg"
       iex> JOSE.JWS.verify(jwk_es256, signed_es256) |> elem(0)
+      true
+
+      # ES256K
+      iex> signed_es256k = JOSE.JWS.sign(jwk_es256k, "{}", %{ "alg" => "ES256K" }) |> JOSE.JWS.compact |> elem(1)
+      "eyJhbGciOiJFUzI1NiJ9.e30.nb7cEQQuIi2NgcP5A468FHGG8UZg8gWZjloISyVIwNh3X6FiTTFZsvc0mL3RnulWoNJzKF6xwhae3botI1LbRg"
+      iex> JOSE.JWS.verify(jwk_es256k, signed_es256k) |> elem(0)
       true
 
       # ES384

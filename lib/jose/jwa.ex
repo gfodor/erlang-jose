@@ -225,7 +225,7 @@ defmodule JOSE.JWA do
          ["Ed25519", "Ed25519ph", "Ed448", "Ed448ph", "X25519", "X448"]}},
        {:jws,
         {:alg,
-         ["ES256", "ES384", "ES512", "Ed25519", "Ed25519ph", "Ed448", "Ed448ph",
+         ["ES256", "ES256K", "ES384", "ES512", "Ed25519", "Ed25519ph", "Ed448", "Ed448ph",
           "HS256", "HS384", "HS512", "PS256", "PS384", "PS512", "Poly1305", "RS256",
           "RS384", "RS512", "none"]}}]
 

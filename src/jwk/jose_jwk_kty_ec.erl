@@ -123,6 +123,8 @@ generate_key(P) when is_atom(P) ->
 	generate_key({namedCurve, P});
 generate_key(<<"P-256">>) ->
 	generate_key(secp256r1);
+generate_key(<<"P-256K">>) ->
+	generate_key(secp256k1);
 generate_key(<<"P-384">>) ->
 	generate_key(secp384r1);
 generate_key(<<"P-521">>) ->
@@ -217,6 +219,7 @@ signer(#'ECPrivateKey'{parameters={namedCurve, Parameters}}, _Fields) ->
 	#{
 		<<"alg">> => case parameters_to_crv(Parameters) of
 			<<"P-256">> -> <<"ES256">>;
+			<<"P-256K">> -> <<"ES256K">>;
 			<<"P-384">> -> <<"ES384">>;
 			<<"P-521">> -> <<"ES512">>
 		end
@@ -238,6 +241,7 @@ verifier({#'ECPoint'{}, {namedCurve, Parameters}}, _Fields) ->
 	[
 		case parameters_to_crv(Parameters) of
 			<<"P-256">> -> <<"ES256">>;
+			<<"P-256K">> -> <<"ES256K">>;
 			<<"P-384">> -> <<"ES384">>;
 			<<"P-521">> -> <<"ES512">>
 		end
@@ -339,6 +343,8 @@ from_map_ec_private_key(list, F = #{ <<"d">> := D }, Key) ->
 	from_map_ec_private_key(list, maps:remove(<<"d">>, F), Key#'ECPrivateKey'{ privateKey = binary_to_list(jose_jwa_base64url:decode(D)) });
 from_map_ec_private_key(ECMode, F = #{ <<"crv">> := <<"P-256">> }, Key) ->
 	from_map_ec_private_key(ECMode, maps:remove(<<"crv">>, F), Key#'ECPrivateKey'{ parameters = {namedCurve, pubkey_cert_records:namedCurves(secp256r1)} });
+from_map_ec_private_key(ECMode, F = #{ <<"crv">> := <<"P-256K">> }, Key) ->
+	from_map_ec_private_key(ECMode, maps:remove(<<"crv">>, F), Key#'ECPrivateKey'{ parameters = {namedCurve, pubkey_cert_records:namedCurves(secp256k1)} });
 from_map_ec_private_key(ECMode, F = #{ <<"crv">> := <<"P-384">> }, Key) ->
 	from_map_ec_private_key(ECMode, maps:remove(<<"crv">>, F), Key#'ECPrivateKey'{ parameters = {namedCurve, pubkey_cert_records:namedCurves(secp384r1)} });
 from_map_ec_private_key(ECMode, F = #{ <<"crv">> := <<"P-521">> }, Key) ->
@@ -353,6 +359,8 @@ from_map_ec_private_key(_ECMode, F, Key) ->
 %% @private
 from_map_ec_public_key(F = #{ <<"crv">> := <<"P-256">> }, {Point, _Params}) ->
 	from_map_ec_public_key(maps:remove(<<"crv">>, F), {Point, {namedCurve, pubkey_cert_records:namedCurves(secp256r1)}});
+from_map_ec_public_key(F = #{ <<"crv">> := <<"P-256K">> }, {Point, _Params}) ->
+	from_map_ec_public_key(maps:remove(<<"crv">>, F), {Point, {namedCurve, pubkey_cert_records:namedCurves(secp256k1)}});
 from_map_ec_public_key(F = #{ <<"crv">> := <<"P-384">> }, {Point, _Params}) ->
 	from_map_ec_public_key(maps:remove(<<"crv">>, F), {Point, {namedCurve, pubkey_cert_records:namedCurves(secp384r1)}});
 from_map_ec_public_key(F = #{ <<"crv">> := <<"P-521">> }, {Point, _Params}) ->
@@ -379,6 +387,8 @@ int_to_bin_neg(X,Ds) ->
 	int_to_bin_neg(X bsr 8, [(X band 255)|Ds]).
 
 %% @private
+jws_alg_to_digest_type(<<"P-256K">>, 'ES256K') ->
+	sha256;
 jws_alg_to_digest_type(<<"P-256">>, 'ES256') ->
 	sha256;
 jws_alg_to_digest_type(<<"P-384">>, 'ES384') ->
@@ -395,6 +405,8 @@ jws_alg_to_digest_type(KeyOrCurve, ALG) ->
 %% @private
 jws_alg_to_r_s_size('ES256') ->
   32;
+jws_alg_to_r_s_size('ES256K') ->
+  32;
 jws_alg_to_r_s_size('ES384') ->
   48;
 jws_alg_to_r_s_size('ES512') ->
@@ -409,6 +421,8 @@ pad(Bin, Size) ->
 %% @private
 parameters_to_crv(secp256r1) ->
 	<<"P-256">>;
+parameters_to_crv(secp256k1) ->
+	<<"P-256K">>;
 parameters_to_crv(secp384r1) ->
 	<<"P-384">>;
 parameters_to_crv(secp521r1) ->

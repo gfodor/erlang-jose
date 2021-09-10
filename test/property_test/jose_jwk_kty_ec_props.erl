@@ -21,6 +21,7 @@ binary_map() ->
 ec_curve() ->
 	oneof([
 		secp256r1,
+		secp256k1,
 		secp384r1,
 		secp521r1
 	]).

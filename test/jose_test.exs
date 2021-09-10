@@ -439,9 +439,11 @@ defmodule JOSETest do
   test "sign and verify with incompatible key types is not allowed" do
     jwk_oct16 = JOSE.JWK.generate_key({:oct, 16})
     jwk_ec256 = JOSE.JWK.generate_key({:ec, "P-256"})
+    jwk_ec256k = JOSE.JWK.generate_key({:ec, "P-256K"})
     jwk_ec521 = JOSE.JWK.generate_key({:ec, "P-521"})
     jws_hs256 = JOSE.JWS.from(%{"alg" => "HS256"})
     jws_es256 = JOSE.JWS.from(%{"alg" => "ES256"})
+    jws_es256k = JOSE.JWS.from(%{"alg" => "ES256K"})
     jwt = JOSE.JWT.from(%{"test" => true})
 
     assert_raise ErlangError, "Erlang error: {:not_supported, [:ES256]}", fn ->
@@ -456,14 +458,26 @@ defmodule JOSETest do
       JOSE.JWT.sign(jwk_ec521, jws_es256, jwt)
     end
 
+    assert_raise ErlangError, "Erlang error: {:not_supported, [\"P-256K\", :ES256]}", fn ->
+      JOSE.JWT.sign(jwk_ec256k, jws_es256, jwt)
+    end
+
+    assert_raise ErlangError, "Erlang error: {:not_supported, [\"P-256\", :ES256K]}", fn ->
+      JOSE.JWT.sign(jwk_ec256, jws_es256k, jwt)
+    end
+
     signed_hs256 = JOSE.JWT.sign(jwk_oct16, jws_hs256, jwt) |> JOSE.JWS.compact() |> elem(1)
     signed_es256 = JOSE.JWT.sign(jwk_ec256, jws_es256, jwt) |> JOSE.JWS.compact() |> elem(1)
+    signed_es256k = JOSE.JWT.sign(jwk_ec256k, jws_es256k, jwt) |> JOSE.JWS.compact() |> elem(1)
     assert(JOSE.JWT.verify_strict(jwk_oct16, ["HS256"], signed_hs256) |> elem(0))
     assert(JOSE.JWT.verify_strict(jwk_ec256, ["ES256"], signed_es256) |> elem(0))
+    assert(JOSE.JWT.verify_strict(jwk_ec256k, ["ES256K"], signed_es256k) |> elem(0))
     refute(JOSE.JWT.verify_strict(jwk_ec256, ["HS256"], signed_hs256) |> elem(0))
     refute(JOSE.JWT.verify_strict(jwk_oct16, ["ES256"], signed_es256) |> elem(0))
+    refute(JOSE.JWT.verify_strict(jwk_ec256, ["ES256k"], signed_es256k) |> elem(0))
     refute(JOSE.JWT.verify(jwk_ec256, signed_hs256) |> elem(0))
     refute(JOSE.JWT.verify(jwk_oct16, signed_es256) |> elem(0))
+    refute(JOSE.JWT.verify(jwk_oct16, signed_es256k) |> elem(0))
     {kty_module, kty} = jwk_oct16.kty
     bad_signed_input = JOSE.JWS.signing_input(JOSE.JWT.to_binary(jwt) |> elem(1), jws_es256)
     bad_signature = kty_module.sign(bad_signed_input, :HS256, kty) |> :jose_base64url.encode()

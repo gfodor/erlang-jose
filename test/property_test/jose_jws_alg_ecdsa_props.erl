@@ -21,11 +21,13 @@ binary_map() ->
 alg() ->
 	oneof([
 		<<"ES256">>,
+		<<"ES256K">>,
 		<<"ES384">>,
 		<<"ES512">>
 	]).
 
 alg(secp256r1) -> return(<<"ES256">>);
+alg(secp256k1) -> return(<<"ES256K">>);
 alg(secp384r1) -> return(<<"ES384">>);
 alg(secp521r1) -> return(<<"ES512">>).
 
@@ -39,6 +41,7 @@ opt_map() ->
 ec_curve() ->
 	oneof([
 		secp256r1,
+		secp256k1,
 		secp384r1,
 		secp521r1
 	]).
